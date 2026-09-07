@@ -132,7 +132,7 @@ export default function AppLayout() {
 
   return (
     <div className="app-shell">
-      {/* Sleek Icon Rail Sidebar matching reference image */}
+      {/* Sleek Icon Rail Sidebar */}
       <aside className={`app-sidebar-rail ${sidebarOpen ? 'open' : ''}`}>
         {/* Brand Logo at top */}
         <div className="rail-brand" onClick={() => navigate(`/${rolePath}/overview`)} title="CRM Dashboard">
@@ -154,16 +154,14 @@ export default function AppLayout() {
               title={label}
               onClick={() => setSidebarOpen(false)}
             >
-              <div className="rail-icon-wrap">
-                <Icon name={icon} size={19} weight="bold" />
-                {label === 'Chats' && unread > 0 && <span className="rail-badge-dot" />}
-              </div>
+              <Icon name={icon} size={19} weight="bold" />
+              {label === 'Chats' && unread > 0 && <span className="rail-badge-dot" />}
               <span className="rail-tooltip">{label}</span>
             </NavLink>
           ))}
         </nav>
 
-        {/* Bottom Utility Icons (Settings, Help, Logout) */}
+        {/* Bottom Utility Icons */}
         <div className="rail-bottom-stack">
           <NavLink
             to={`/${rolePath}/settings`}
@@ -171,9 +169,7 @@ export default function AppLayout() {
             title="Settings"
             onClick={() => setSidebarOpen(false)}
           >
-            <div className="rail-icon-wrap">
-              <Icon name="settings" size={19} />
-            </div>
+            <Icon name="settings" size={19} />
             <span className="rail-tooltip">Settings</span>
           </NavLink>
 
@@ -183,9 +179,7 @@ export default function AppLayout() {
             title="Help & Support"
             onClick={() => toast('Messaging CRM v2.0 · Reference Edition', 'info')}
           >
-            <div className="rail-icon-wrap">
-              <Icon name="help" size={19} />
-            </div>
+            <Icon name="help" size={19} />
             <span className="rail-tooltip">Help</span>
           </button>
 
@@ -195,9 +189,7 @@ export default function AppLayout() {
             title="Log Out"
             onClick={() => logout().then(() => navigate('/login'))}
           >
-            <div className="rail-icon-wrap">
-              <Icon name="log-out" size={19} />
-            </div>
+            <Icon name="log-out" size={19} />
             <span className="rail-tooltip">Log out</span>
           </button>
         </div>
@@ -267,7 +259,8 @@ export default function AppLayout() {
           <Outlet />
         </main>
       </div>
-{drawerOpen && (
+
+      {drawerOpen && (
         <>
           <div className="drawer-overlay" onClick={() => setDrawerOpen(false)} />
           <div className="drawer">
