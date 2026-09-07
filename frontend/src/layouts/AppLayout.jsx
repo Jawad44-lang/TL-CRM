@@ -73,7 +73,8 @@ export default function AppLayout() {
   const { connected } = useSocket();
   const navigate = useNavigate();
   const toast = useToast();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 1100px)').matches);
+  const [sidebarOpen, setSidebarOpen] = useState(() => !window.matchMedia('(max-width: 1100px)').matches);
   const [menuOpen, setMenuOpen] = useState(false);
   const [unread, setUnread] = useState(0);
   const [notifs, setNotifs] = useState([]);
@@ -101,6 +102,29 @@ export default function AppLayout() {
     document.addEventListener('mousedown', onClick);
     return () => document.removeEventListener('mousedown', onClick);
   }, []);
+
+  // Keep sidebar behaviour in sync when crossing the mobile/desktop breakpoint
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 1100px)');
+    const onChange = (e) => {
+      setIsMobile(e.matches);
+      setSidebarOpen(!e.matches); // sensible default whenever the breakpoint changes
+    };
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+
+  // Close overlays with Escape
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key !== 'Escape') return;
+      setMenuOpen(false);
+      setDrawerOpen(false);
+      if (isMobile) setSidebarOpen(false);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [isMobile]);
 
   useSocketEvent('notification:new', (n) => {
     setNotifs((prev) => [n, ...prev].slice(0, 15));
@@ -131,7 +155,7 @@ export default function AppLayout() {
   const rolePath = user.role.toLowerCase();
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${!sidebarOpen ? 'rail-collapsed' : ''}`}>
       {/* Sleek Icon Rail Sidebar */}
       <aside className={`app-sidebar-rail ${sidebarOpen ? 'open' : ''}`}>
         {/* Brand Logo at top */}
@@ -152,7 +176,7 @@ export default function AppLayout() {
               to={to}
               className={({ isActive }) => `rail-nav-item ${isActive ? 'active' : ''}`}
               title={label}
-              onClick={() => setSidebarOpen(false)}
+              onClick={() => { if (isMobile) setSidebarOpen(false); }}
             >
               <Icon name={icon} size={19} weight="bold" />
               {label === 'Chats' && unread > 0 && <span className="rail-badge-dot" />}
@@ -163,11 +187,34 @@ export default function AppLayout() {
 
         {/* Bottom Utility Icons */}
         <div className="rail-bottom-stack">
+          <button
+            type="button"
+            className="rail-nav-item rail-btn-item"
+            title={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
+            onClick={toggleTheme}
+            aria-label="Toggle theme"
+          >
+            <Icon name={isDark ? 'sun' : 'moon'} size={19} weight="bold" />
+            <span className="rail-tooltip">{isDark ? 'Light theme' : 'Dark theme'}</span>
+          </button>
+
+          <button
+            type="button"
+            className="rail-nav-item rail-btn-item"
+            title="Notifications"
+            onClick={openDrawer}
+            aria-label="Notifications"
+          >
+            <Icon name="bell" size={19} />
+            {unread > 0 && <span className="rail-count-badge">{unread > 99 ? '99+' : unread}</span>}
+            <span className="rail-tooltip">Notifications</span>
+          </button>
+
           <NavLink
             to={`/${rolePath}/settings`}
             className={({ isActive }) => `rail-nav-item ${isActive ? 'active' : ''}`}
             title="Settings"
-            onClick={() => setSidebarOpen(false)}
+            onClick={() => { if (isMobile) setSidebarOpen(false); }}
           >
             <Icon name="settings" size={19} />
             <span className="rail-tooltip">Settings</span>
@@ -195,12 +242,18 @@ export default function AppLayout() {
         </div>
       </aside>
 
-      {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
+      {isMobile && sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
 
       <div className="app-body">
         <header className="app-topbar">
           <div className="topbar-left">
-            <button className="icon-btn menu-btn" type="button" onClick={() => setSidebarOpen(true)} aria-label="Open navigation">
+            <button
+              className="icon-btn menu-btn"
+              type="button"
+              onClick={() => setSidebarOpen((o) => !o)}
+              aria-label={sidebarOpen ? 'Collapse navigation' : 'Expand navigation'}
+              title={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+            >
               <Icon name="menu" size={18} />
             </button>
             <div className="topbar-breadcrumb">
@@ -212,19 +265,6 @@ export default function AppLayout() {
           </div>
 
           <div className="topbar-right">
-            <button
-              className="icon-btn theme-toggle-btn"
-              onClick={toggleTheme}
-              title={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
-              type="button"
-              aria-label="Toggle theme"
-            >
-              <Icon name={isDark ? 'sun' : 'moon'} size={17} weight="bold" />
-            </button>
-            <button className="icon-btn" onClick={openDrawer} title="Notifications" type="button" aria-label="Notifications">
-              <Icon name="bell" size={17} />
-              {unread > 0 && <span className="badge-dot">{unread > 99 ? '99+' : unread}</span>}
-            </button>
             <div className="user-menu-trigger" ref={menuRef}>
               <button className="user-chip" type="button" onClick={() => setMenuOpen((o) => !o)} aria-haspopup="menu">
                 <Avatar name={user.name} color={user.avatarColor} size="sm" />
