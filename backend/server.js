@@ -9,6 +9,15 @@ import { seedIfEmpty } from './src/seeds/demoSeed.js';
 const server = http.createServer(app);
 initSocket(server);
 
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`❌ Port ${env.PORT} is already in use — close the other app using it, or change PORT in backend/.env.`);
+  } else {
+    console.error('❌ Server error:', err.message);
+  }
+  process.exit(1);
+});
+
 connectDB()
   .then(async () => {
     await seedIfEmpty();

@@ -23,13 +23,27 @@ npm run install-all          # root + backend + frontend
 # 2. Configure environment (backend/.env)
 MONGO_URI=mongodb://127.0.0.1:27017/messaging_crm
 JWT_SECRET=change-me
-PORT=5000
+PORT=5050
 CLIENT_URL=http://localhost:5173
 DEMO_MODE=true
 
 # 3. Run both servers
-npm run dev                  # backend :5000 + frontend :5173 (concurrently)
+npm run dev                  # backend :5050 + frontend :5173 (concurrently)
 ```
+
+## Troubleshooting (agar kisi PC pe na chale)
+
+| Error in terminal | Reason | Fix |
+| --- | --- | --- |
+| `querySrv ECONNREFUSED _mongodb._tcp...` | `mongodb+srv://` URI ke liye DNS SRV lookup fail — **network/ISP dependent**, isi liye ek PC pe chalta hai dusre pe nahi | Ab code khud handle karta hai: `.env` mein standard `mongodb://` URI hai, aur agar kabhi `+srv` URI paste ho jaye to backend khud usse standard form mein convert karta hai (DoH fallback). DNS `8.8.8.8`/`1.1.1.1` bhi kar sakte ho |
+| `EADDRINUSE: address already in use :::5000` | Port pe koi aur app baithi hai (is PC pe `python.exe app.py` / EarthScape ML 5000 pe thi) | Backend ab default **5050** pe hai. Aur conflict ho to `PORT` badlo `backend/.env` mein + `frontend/vite.config.js` ke dono proxy targets update karo |
+| `bad auth / Authentication failed` | Atlas username/password galat | `backend/.env` ke `MONGO_URI` ki credentials check karo |
+| Connection timeout (8s ke baad fail) | Internet band, ya Atlas **Network Access** mein tumhari IP whitelist nahi hai | Internet check karo; Atlas Dashboard → Network Access → `0.0.0.0/0` (dev ke liye) add karo |
+| `bad option: --watch` / `npm run dev` turant fail | Node version purana hai (18.11 se kam) | Node.js 18+ install karo, ya bina watch ke chalao: `npm --prefix backend start` |
+
+> Note: `frontend` backend ko `vite.config.js` ke proxies (`/api` **aur** `/socket.io` → `http://localhost:5050`)
+> se hit karta hai — backend hamesha port 5050 pe chalna chahiye, warna frontend pe "Network Error" aayega
+> aur socket bhi connect nahi hoga.
 
 The database **auto-seeds** on first boot (60 customers, 12 groups, 3 Telegram accounts, 500+ messages,
 assignment history, temporary-access examples, read/unread states). Manual reseed:

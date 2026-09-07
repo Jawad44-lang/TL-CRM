@@ -207,6 +207,7 @@ a { color: var(--brand); text-decoration: none; }
 }
 .rail-brand:hover { transform: scale(1.05); }
 .rail-logo-badge {
+  display: grid; place-items: center;
   width: 44px; height: 44px; border-radius: 14px;
   background: #18191f;
   display: grid; place-items: center;

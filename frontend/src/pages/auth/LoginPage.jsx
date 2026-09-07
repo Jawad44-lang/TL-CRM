@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth, homeFor } from '../../context/AuthContext.jsx';
 import { useToast } from '../../components/ui.jsx';
 import Icon from '../../components/icons.jsx';
+import LogoMark from '../../components/Logo.jsx';
 import api from '../../services/api';
 
 export default function LoginPage() {
@@ -44,10 +45,10 @@ export default function LoginPage() {
       <div className="login-card">
         <div className="login-visual">
           <div className="login-visual-brand">
-            <span className="brand-mark">M</span>
+            <LogoMark size={34} />
             <span className="brand-text">
-              <span className="brand-name">Messaging CRM</span>
-              <span className="brand-sub">Business messaging</span>
+              <span className="brand-name">Trading Legend</span>
+              <span className="brand-sub">CRM Workspace</span>
             </span>
           </div>
 

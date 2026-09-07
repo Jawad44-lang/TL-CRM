@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useTheme } from '../context/ThemeContext.jsx';
 import { useSocket, useSocketEvent } from '../socket/socket.jsx';
-import { Avatar, useToast } from '../components/ui.jsx';
+import { useToast } from '../components/ui.jsx';
+import LogoMark from '../components/Logo.jsx';
 import Icon from '../components/icons.jsx';
 import { timeAgo } from '../utils/format';
 
@@ -75,11 +76,9 @@ export default function AppLayout() {
   const toast = useToast();
   const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 1100px)').matches);
   const [sidebarOpen, setSidebarOpen] = useState(() => !window.matchMedia('(max-width: 1100px)').matches);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [unread, setUnread] = useState(0);
   const [notifs, setNotifs] = useState([]);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const menuRef = useRef(null);
 
   const loadNotifications = useCallback(async () => {
     try {
@@ -94,14 +93,6 @@ export default function AppLayout() {
   useEffect(() => {
     loadNotifications();
   }, [loadNotifications]);
-
-  useEffect(() => {
-    const onClick = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false);
-    };
-    document.addEventListener('mousedown', onClick);
-    return () => document.removeEventListener('mousedown', onClick);
-  }, []);
 
   // Keep sidebar behaviour in sync when crossing the mobile/desktop breakpoint
   useEffect(() => {
@@ -118,7 +109,6 @@ export default function AppLayout() {
   useEffect(() => {
     const onKey = (e) => {
       if (e.key !== 'Escape') return;
-      setMenuOpen(false);
       setDrawerOpen(false);
       if (isMobile) setSidebarOpen(false);
     };
@@ -161,10 +151,7 @@ export default function AppLayout() {
         {/* Brand Logo at top */}
         <div className="rail-brand" onClick={() => navigate(`/${rolePath}/overview`)} title="CRM Dashboard">
           <div className="rail-logo-badge">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M4 6C4 4.89543 4.89543 4 6 4H14C15.1046 4 16 4.89543 16 6V10C16 11.1046 15.1046 12 14 12H4V6Z" fill="white" />
-              <path d="M4 14C4 12.8954 4.89543 12 6 12H11C12.1046 12 13 12.8954 13 14V18C13 19.1046 12.1046 20 11 20H6C4.89543 20 4 19.1046 4 18V14Z" fill="white" fillOpacity="0.75" />
-            </svg>
+            <LogoMark size={26} />
           </div>
         </div>
 
@@ -264,35 +251,6 @@ export default function AppLayout() {
             </div>
           </div>
 
-          <div className="topbar-right">
-            <div className="user-menu-trigger" ref={menuRef}>
-              <button className="user-chip" type="button" onClick={() => setMenuOpen((o) => !o)} aria-haspopup="menu">
-                <Avatar name={user.name} color={user.avatarColor} size="sm" />
-                <span className="user-meta">
-                  <span className="user-name">{user.name}</span>
-                  <span className="user-role">{user.role}</span>
-                </span>
-                <Icon name="chevron-down" size={14} className="user-chev" />
-              </button>
-              {menuOpen && (
-                <div className="user-menu" onClick={(e) => e.stopPropagation()}>
-                  <div className="user-menu-head">
-                    <div className="user-menu-name">{user.name}</div>
-                    <div className="user-menu-mail">{user.email}</div>
-                  </div>
-                  <a href="/settings" onClick={(e) => { e.preventDefault(); setMenuOpen(false); navigate(`/${rolePath}/settings`); }}>
-                    <Icon name="settings" size={15} /> Settings
-                  </a>
-                  <a href="/notifications" onClick={(e) => { e.preventDefault(); setMenuOpen(false); navigate(`/${rolePath}/notifications`); }}>
-                    <Icon name="bell" size={15} /> Notifications
-                  </a>
-                  <button className="danger" type="button" onClick={() => logout().then(() => navigate('/login'))}>
-                    <Icon name="log-out" size={15} /> Log out
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
         </header>
 
         <main className="app-main">

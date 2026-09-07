@@ -4,6 +4,9 @@
   "private": true,
   "type": "module",
   "main": "server.js",
+  "engines": {
+    "node": ">=18.11"
+  },
   "scripts": {
     "dev": "node --watch server.js",
     "start": "node server.js",
