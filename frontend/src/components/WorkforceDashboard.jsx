@@ -2,19 +2,16 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Icon from './icons.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
-import { useTheme } from '../context/ThemeContext.jsx';
 import api from '../services/api.js';
 import { useToast } from './ui.jsx';
 import SimulatorModal from './SimulatorModal.jsx';
 
 export default function WorkforceDashboard({ role = 'ADMIN' }) {
   const { user } = useAuth();
-  const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const toast = useToast();
 
-  // Active top navigation tab
-  const [activeTab, setActiveTab] = useState('Dashboard');
+  // Top navigation tabs (the global RefTopbar now lives in AppLayout)
   const [scheduleFilter, setScheduleFilter] = useState('Today');
   const [scheduleDropdownOpen, setScheduleDropdownOpen] = useState(false);
   const [dateLabel, setDateLabel] = useState('28 Apr, 2026');
@@ -207,79 +204,6 @@ export default function WorkforceDashboard({ role = 'ADMIN' }) {
 
   return (
     <div className="workforce-dashboard-root">
-      {/* Top Header Pill Bar (strictly matching reference image) */}
-      <header className="ref-topbar">
-        {/* Navigation Tabs (Dashboard [Dark pill active], Employees, Reports, Schedule, Company) */}
-        <nav className="ref-nav-pills" aria-label="Main Navigation">
-          {[
-            { id: 'Dashboard', label: 'Dashboard', path: `/${role.toLowerCase()}/overview` },
-            { id: 'Employees', label: 'Employees', path: `/${role.toLowerCase()}/users` },
-            { id: 'Reports', label: 'Reports', path: `/${role.toLowerCase()}/activity` },
-            { id: 'Schedule', label: 'Schedule', path: `/${role.toLowerCase()}/chats` },
-            { id: 'Company', label: 'Company', path: `/${role.toLowerCase()}/platforms` },
-          ].map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              className={`ref-pill-tab ${activeTab === item.id ? 'active' : ''}`}
-              onClick={() => {
-                setActiveTab(item.id);
-                if (item.id !== 'Dashboard') navigate(item.path);
-              }}
-            >
-              {item.label}
-            </button>
-          ))}
-        </nav>
-
-        {/* Right action icons */}
-        <div className="ref-topbar-actions">
-          <button
-            className="ref-icon-circle-btn"
-            type="button"
-            title="Search"
-            onClick={() => {
-              const q = prompt('Search CRM records or employees:');
-              if (q) setEmployeeSearch(q);
-            }}
-          >
-            <Icon name="search" size={17} />
-          </button>
-
-          <button
-            className="ref-icon-circle-btn theme-toggle-btn"
-            type="button"
-            title={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
-            onClick={toggleTheme}
-            aria-label="Toggle theme"
-          >
-            <Icon name={isDark ? 'sun' : 'moon'} size={17} weight="bold" />
-          </button>
-
-          <button
-            className="ref-icon-circle-btn notif-btn"
-            type="button"
-            title="Notifications"
-            onClick={() => navigate(`/${role.toLowerCase()}/notifications`)}
-          >
-            <Icon name="bell" size={17} />
-            <span className="ref-bell-dot" />
-          </button>
-
-          <div
-            className="ref-user-avatar-btn"
-            title={`${user?.name || 'User'} (${user?.role || role})`}
-            onClick={() => navigate(`/${role.toLowerCase()}/settings`)}
-          >
-            <img
-              src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=faces"
-              alt={user?.name || 'Profile'}
-              className="ref-avatar-img"
-            />
-          </div>
-        </div>
-      </header>
-
       {/* Main Greeting & Action Row */}
       <section className="ref-greeting-row">
         <div className="ref-greeting-left">

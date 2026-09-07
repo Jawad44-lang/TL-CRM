@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { useAuth, homeFor } from './context/AuthContext.jsx';
 import ProtectedRoute from './routes/ProtectedRoute.jsx';
 import AppLayout from './layouts/AppLayout.jsx';
+import LogoMark from './components/Logo.jsx';
 import LoginPage from './pages/auth/LoginPage.jsx';
 import AdminOverview from './pages/admin/AdminOverview.jsx';
 import AdminUsers from './pages/admin/AdminUsers.jsx';
@@ -18,12 +19,22 @@ import GroupsPage from './pages/shared/GroupsPage.jsx';
 import ChatsPage from './pages/shared/ChatsPage.jsx';
 import NotificationsPage from './pages/shared/NotificationsPage.jsx';
 import SettingsPage from './pages/shared/SettingsPage.jsx';
+import AttendancePage from './pages/shared/AttendancePage.jsx';
 
 export default function App() {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <div className="boot-screen"><div className="spinner spinner-lg" /></div>;
+    return (
+      <div className="boot-screen">
+        <div className="boot-brand">
+          <div className="boot-logo"><LogoMark size={58} /></div>
+          <div className="boot-title">Trading Legend</div>
+          <div className="boot-sub">CRM Workspace</div>
+          <div className="spinner spinner-lg" style={{ marginTop: 10 }} />
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -41,6 +52,7 @@ export default function App() {
         <Route path="groups" element={<GroupsPage />} />
         <Route path="chats" element={<ChatsPage />} />
         <Route path="activity" element={<AdminActivity />} />
+        <Route path="attendance" element={<AttendancePage />} />
         <Route path="employees/:id" element={<EmployeeProfile />} />
         <Route path="notifications" element={<NotificationsPage />} />
         <Route path="settings" element={<SettingsPage />} />
@@ -57,6 +69,7 @@ export default function App() {
         <Route path="groups" element={<GroupsPage />} />
         <Route path="chats" element={<ChatsPage />} />
         <Route path="temp-access" element={<ManagerTempAccess />} />
+        <Route path="attendance" element={<AttendancePage />} />
         <Route path="notifications" element={<NotificationsPage />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>

@@ -10,10 +10,10 @@ const MESSAGING_ACTIONS = ['VIEW', 'READ', 'SEND', 'REPLY'];
 const MGMT_ACTIONS = ['EDIT', 'DELETE', 'ASSIGN', 'REASSIGN', 'RESOLVE', 'MANAGE'];
 
 const SCOPES = {
-  PLATFORM: { label: 'Platform', hint: 'Is platform ke saare accounts (current + future) — sabse broad access.', icon: 'grid', badge: 'badge-sky' },
-  ACCOUNT: { label: 'Account', hint: 'Sirf ek inbox/business account.', icon: 'plug', badge: 'badge-indigo' },
-  GROUP: { label: 'Group', hint: 'Sirf ek group chat.', icon: 'users-round', badge: 'badge-amber' },
-  CUSTOMER: { label: 'Customer', hint: 'Sirf ek customer chat — sabse limited access.', icon: 'user-round', badge: 'badge-green' },
+  PLATFORM: { label: 'Platform', hint: 'All accounts on this platform (current + future) — the broadest access.', icon: 'grid', badge: 'badge-sky' },
+  ACCOUNT: { label: 'Account', hint: 'A single inbox/business account.', icon: 'plug', badge: 'badge-indigo' },
+  GROUP: { label: 'Group', hint: 'A single group chat.', icon: 'users-round', badge: 'badge-amber' },
+  CUSTOMER: { label: 'Customer', hint: 'A single customer chat — the most limited access.', icon: 'user-round', badge: 'badge-green' },
 };
 
 const PRESETS = [
@@ -131,7 +131,7 @@ export default function AdminPermissions() {
     <div className="page">
       <h1 className="page-title">Permissions</h1>
       <p className="page-sub">
-        Ek jagah se control karo — kaun kya access kar sakta hai. Managers kabhi apne scope se zyada grant nahi kar sakte (server enforce karta hai).
+        See and control what each member can access. Managers can never grant beyond their own scope — enforced server-side.
       </p>
 
       <div className="card">
@@ -143,7 +143,7 @@ export default function AdminPermissions() {
               <div className="perm-item-sub">
                 {selectedUser
                   ? `${selectedUser.role} · ${grants ? `${grants.length} active permission${grants.length === 1 ? '' : 's'}` : 'loading…'}`
-                  : 'Member chuno'}
+                  : 'Select a member'}
               </div>
             </div>
           </div>
@@ -156,7 +156,7 @@ export default function AdminPermissions() {
 
         {!grants && userId && <PageLoader text="Loading permissions..." />}
         {grants && grants.length === 0 && (
-          <EmptyState icon="key" title="Koi permission nahi" sub="Is member ko naya access dene ke liye neeche 3 easy steps follow karo." />
+          <EmptyState icon="key" title="No permissions yet" sub="Follow the 3 easy steps below to grant this member new access." />
         )}
 
         {grants && grants.length > 0 && (
@@ -200,7 +200,7 @@ export default function AdminPermissions() {
           {error && <div className="error-text">{error}</div>}
           <form onSubmit={createGrant}>
             <div className="step-label">
-              <span className="step-num">1</span> Kya cheez ka access dena hai?
+              <span className="step-num">1</span> What should they get access to?
             </div>
             <div className="seg">
               {Object.entries(SCOPES).map(([value, s]) => (
@@ -218,7 +218,7 @@ export default function AdminPermissions() {
             <p className="small muted" style={{ margin: '8px 2px 0' }}>{scopeMeta.hint}</p>
 
             <div className="step-label">
-              <span className="step-num">2</span> Kaunsa {scopeMeta.label.toLowerCase()}?
+              <span className="step-num">2</span> Which {scopeMeta.label.toLowerCase()}?
             </div>
             <select className="select" style={{ maxWidth: 420 }} value={resourceId} onChange={(e) => setResourceId(e.target.value)} required>
               <option value="">— choose {scopeMeta.label.toLowerCase()} —</option>
@@ -226,7 +226,7 @@ export default function AdminPermissions() {
             </select>
 
             <div className="step-label">
-              <span className="step-num">3</span> Kitna access?
+              <span className="step-num">3</span> How much access?
               <span className="preset-row" style={{ marginLeft: 'auto' }}>
                 {PRESETS.map((p) => (
                   <button key={p.label} type="button" className="preset-btn" onClick={() => setActions(p.actions)}>
@@ -272,7 +272,7 @@ export default function AdminPermissions() {
 
             <div className="grant-summary">
               <Icon name="key" size={15} />
-              <span>{summary || 'Upar resource chuno — yahan plain language mein dikhega ke exactly kya grant hoga.'}</span>
+              <span>{summary || 'Pick a resource above — a plain-language summary of exactly what will be granted will appear here.'}</span>
             </div>
 
             <button className="btn" type="submit" disabled={busy || !resourceId || !actions.length}>

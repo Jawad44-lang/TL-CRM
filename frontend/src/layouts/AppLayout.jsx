@@ -7,6 +7,7 @@ import { useSocket, useSocketEvent } from '../socket/socket.jsx';
 import { useToast } from '../components/ui.jsx';
 import LogoMark from '../components/Logo.jsx';
 import { useConfirm } from '../components/ConfirmProvider.jsx';
+import RefTopbar from '../components/RefTopbar.jsx';
 import Icon from '../components/icons.jsx';
 import { timeAgo } from '../utils/format';
 
@@ -27,6 +28,7 @@ const NAV = {
         ['/admin/users', 'Users', 'users'],
         ['/admin/platforms', 'Platforms', 'plug'],
         ['/admin/permissions', 'Permissions', 'key'],
+        ['/admin/attendance', 'Attendance', 'calendar'],
         ['/admin/activity', 'Activity', 'clock'],
       ],
     },
@@ -46,6 +48,7 @@ const NAV = {
       label: 'Team',
       items: [
         ['/manager/employees', 'Employees', 'users'],
+        ['/manager/attendance', 'Attendance', 'calendar'],
         ['/manager/temp-access', 'Temp Access', 'lock'],
       ],
     },
@@ -264,6 +267,7 @@ export default function AppLayout() {
         </header>
 
         <main className="app-main">
+          <RefTopbar unread={unread} />
           <Outlet />
         </main>
       </div>

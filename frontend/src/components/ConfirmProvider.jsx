@@ -21,14 +21,14 @@ export function resetConfirmSkips() {
   try { localStorage.removeItem(SKIP_KEY); } catch { /* ignore */ }
 }
 
-/* Global confirmation dialog — har dangerous action ke liye.
+/* Global confirmation dialog — for every dangerous action.
    Usage: const confirm = useConfirm();
           const ok = await confirm({ key: 'user.delete', title, message, confirmText });
           if (!ok) return;
 
-   `key` har action ka unique ID hai. Agar user ne popup mein
-   "Don't show me again for this action" tick kiya to SIRF isi key ka
-   popup skip hoga — baaki sab actions ke popups chalte rahenge. */
+   `key` is the unique ID of the action. If the user ticks
+   "Don't show me again for this action" in the popup, ONLY this key's
+   popup is skipped — popups for all other actions keep appearing. */
 export function ConfirmProvider({ children }) {
   const [state, setState] = useState(null);
   const [skipChecked, setSkipChecked] = useState(false);

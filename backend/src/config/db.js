@@ -7,10 +7,11 @@ let cachedUri = null;
 
 /* ------------------------------------------------------------------ *
  * mongodb+srv:// → standard mongodb:// auto-conversion.
- * Node ka DNS SRV lookup (querySrv) kai networks/ISP pe block hota hai
- * — isi liye backend ek PC pe chalta tha aur doosre pe nahi. Yeh helper
- * SRV + TXT records resolve karke (local DNS fail ho to DNS-over-HTTPS
- * se) standard multi-host URI banata hai — SRV dependency khatam.
+ * Node's DNS SRV lookup (querySrv) is blocked on many networks/ISPs —
+ * that's why the backend worked on one PC but not another. This helper
+ * resolves the SRV + TXT records (falling back to DNS-over-HTTPS when
+ * local DNS fails) and builds a standard multi-host URI — removing the
+ * SRV dependency entirely.
  * ------------------------------------------------------------------ */
 
 function parseSrvUri(uri) {
@@ -87,7 +88,7 @@ async function txtForCluster(host) {
 
 export async function resolveMongoUri(rawUri) {
   const parsed = parseSrvUri(rawUri);
-  if (!parsed) return rawUri; // standard mongodb:// — kuch karne ki zaroorat nahi
+  if (!parsed) return rawUri; // already a standard mongodb:// — nothing to do
 
   const srvName = `_mongodb._tcp.${parsed.host}`;
   let hosts = await srvLocal(srvName);
@@ -100,9 +101,9 @@ export async function resolveMongoUri(rawUri) {
   }
   if (!hosts) {
     throw new Error(
-      `Cannot resolve Atlas SRV record ${srvName} (local DNS + DoH dono fail).\n` +
-        '   💡 Fix: backend/.env mein mongodb+srv:// ki jagah standard multi-host\n' +
-        '      mongodb:// URI use karo (dekho .env.example), ya DNS 8.8.8.8/1.1.1.1 karo.'
+      `Cannot resolve Atlas SRV record ${srvName} (both local DNS and DoH failed).\n` +
+        '   💡 Fix: in backend/.env replace mongodb+srv:// with a standard multi-host\n' +
+        '      mongodb:// URI (see .env.example), or set DNS to 8.8.8.8/1.1.1.1.'
     );
   }
 

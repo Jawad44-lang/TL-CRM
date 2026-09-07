@@ -16,6 +16,7 @@ import * as access from '../controllers/accessController.js';
 import * as dashboard from '../controllers/dashboardController.js';
 import * as demo from '../controllers/demoController.js';
 import * as activity from '../controllers/activityController.js';
+import * as attendance from '../controllers/attendanceController.js';
 
 const r = Router();
 
@@ -83,6 +84,10 @@ r.get('/dashboard', protect, dashboard.getDashboard);
 
 /* ----------------------------- Activity Logs -------------------------- */
 r.get('/activity', protect, activity.listActivity);
+
+/* ----------------------- Attendance & Performance ---------------------- */
+r.get('/attendance', protect, requireRole('ADMIN', 'MANAGER'), attendance.attendanceMonth);
+r.get('/performance', protect, requireRole('ADMIN', 'MANAGER'), attendance.performanceMonth);
 
 /* -------------------------------- Demo -------------------------------- */
 const demoOnly = (req, res, next) => (env.DEMO_MODE ? next() : next(new ApiError(403, 'Demo tools are disabled (DEMO_MODE=false).')));

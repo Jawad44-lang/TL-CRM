@@ -65,8 +65,8 @@ export default function SettingsPage() {
       <div className="card" style={{ maxWidth: 640 }}>
         <h3 className="card-title">Confirmation popups</h3>
         <p className="small muted" style={{ marginTop: 0 }}>
-          Dangerous actions (delete, disable, log out…) ask for confirmation first. Agar tumne kisi action pe
-          &quot;Don&apos;t show me again&quot; tick kiya tha, to sirf wohi popup skip hota hai — yahan se sab wapas on kar sakte ho.
+          Dangerous actions (delete, disable, log out…) ask for confirmation first. If you ticked
+          &quot;Don&apos;t show me again&quot; on an action, only that popup is skipped — you can re-enable everything here.
         </p>
         <button className="btn btn-ghost" type="button" onClick={reenableConfirms} disabled={skipCount === 0}>
           Re-enable all confirmation popups{skipCount > 0 ? ` (${skipCount} turned off)` : ''}

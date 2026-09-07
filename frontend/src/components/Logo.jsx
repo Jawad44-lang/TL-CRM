@@ -1,4 +1,4 @@
-/* Trading Legend brand logo — pure SVG (koi image file ki zaroorat nahi).
+/* Trading Legend brand logo — pure SVG (no image file needed).
    Gradient TL monogram: flag-style T crossbar + L base, orange→yellow. */
 
 export default function LogoMark({ size = 26 }) {

@@ -31,19 +31,18 @@ DEMO_MODE=true
 npm run dev                  # backend :5050 + frontend :5173 (concurrently)
 ```
 
-## Troubleshooting (agar kisi PC pe na chale)
+## Troubleshooting (if it doesn't run on a PC)
 
 | Error in terminal | Reason | Fix |
 | --- | --- | --- |
-| `querySrv ECONNREFUSED _mongodb._tcp...` | `mongodb+srv://` URI ke liye DNS SRV lookup fail — **network/ISP dependent**, isi liye ek PC pe chalta hai dusre pe nahi | Ab code khud handle karta hai: `.env` mein standard `mongodb://` URI hai, aur agar kabhi `+srv` URI paste ho jaye to backend khud usse standard form mein convert karta hai (DoH fallback). DNS `8.8.8.8`/`1.1.1.1` bhi kar sakte ho |
-| `EADDRINUSE: address already in use :::5000` | Port pe koi aur app baithi hai (is PC pe `python.exe app.py` / EarthScape ML 5000 pe thi) | Backend ab default **5050** pe hai. Aur conflict ho to `PORT` badlo `backend/.env` mein + `frontend/vite.config.js` ke dono proxy targets update karo |
-| `bad auth / Authentication failed` | Atlas username/password galat | `backend/.env` ke `MONGO_URI` ki credentials check karo |
-| Connection timeout (8s ke baad fail) | Internet band, ya Atlas **Network Access** mein tumhari IP whitelist nahi hai | Internet check karo; Atlas Dashboard → Network Access → `0.0.0.0/0` (dev ke liye) add karo |
-| `bad option: --watch` / `npm run dev` turant fail | Node version purana hai (18.11 se kam) | Node.js 18+ install karo, ya bina watch ke chalao: `npm --prefix backend start` |
+| `querySrv ECONNREFUSED _mongodb._tcp...` | DNS SRV lookup for the `mongodb+srv://` URI fails — **network/ISP dependent**, which is why it works on one PC but not another | Handled automatically now: `.env` uses a standard `mongodb://` URI, and if a `+srv` URI is ever pasted, the backend converts it to the standard form (DoH fallback). You can also set DNS to `8.8.8.8`/`1.1.1.1` |
+| `EADDRINUSE: address already in use :::5000` | Another app is sitting on the port (on one PC `python.exe app.py` / EarthScape ML held 5000) | The backend now defaults to **5050**. For any other conflict, change `PORT` in `backend/.env` and update both proxy targets in `frontend/vite.config.js` |
+| `bad auth / Authentication failed` | Wrong Atlas username/password | Check the `MONGO_URI` credentials in `backend/.env` |
+| Connection timeout (fails after ~8s) | Internet down, or your IP is not whitelisted in Atlas **Network Access** | Check your internet; in Atlas Dashboard → Network Access add `0.0.0.0/0` (for dev) |
+| `bad option: --watch` / `npm run dev` fails instantly | Node version is too old (below 18.11) | Install Node.js 18+, or run without watch: `npm --prefix backend start` |
 
-> Note: `frontend` backend ko `vite.config.js` ke proxies (`/api` **aur** `/socket.io` → `http://localhost:5050`)
-> se hit karta hai — backend hamesha port 5050 pe chalna chahiye, warna frontend pe "Network Error" aayega
-> aur socket bhi connect nahi hoga.
+> Note: the frontend reaches the backend through the `vite.config.js` proxies (`/api` **and** `/socket.io` → `http://localhost:5050`).
+> The backend must always run on port 5050, otherwise the frontend shows a "Network Error" and the socket won't connect.
 
 The database **auto-seeds** on first boot (60 customers, 12 groups, 3 Telegram accounts, 500+ messages,
 assignment history, temporary-access examples, read/unread states). Manual reseed:

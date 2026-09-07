@@ -6,11 +6,11 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      // Backend default port is 5050 (5000 pe aksar doosri apps reh jaati hain).
-      // PORT change karo to yahan bhi target update karo.
+      // Backend default port is 5050 (port 5000 is often taken by other apps).
+      // If you change PORT, update both proxy targets here too.
       '/api': { target: 'http://localhost:5050', changeOrigin: true },
-      // Socket.IO real-time — browser same-origin pe connect hota hai, isliye
-      // websocket bhi proxy karna zaroori hai (ws: true).
+      // Socket.IO real-time — the browser connects same-origin, so the
+      // websocket must be proxied as well (ws: true).
       '/socket.io': { target: 'http://localhost:5050', changeOrigin: true, ws: true },
     },
   },
