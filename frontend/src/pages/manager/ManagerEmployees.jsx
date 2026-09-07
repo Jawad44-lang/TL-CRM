@@ -4,9 +4,11 @@ import api from '../../services/api';
 import { useSocketEvent } from '../../socket/socket.jsx';
 import { Avatar, EmptyState, Modal, PageLoader, PageHead, useToast } from '../../components/ui.jsx';
 import Icon from '../../components/icons.jsx';
+import { useConfirm } from '../../components/ConfirmProvider.jsx';
 
 export default function ManagerEmployees() {
   const toast = useToast();
+  const confirm = useConfirm();
   const [items, setItems] = useState(null);
   const [creating, setCreating] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', password: '' });
@@ -44,6 +46,15 @@ export default function ManagerEmployees() {
   };
 
   const toggleStatus = async (u) => {
+    if (u.status === 'ACTIVE') {
+      const ok = await confirm({
+        key: 'employee.disable',
+        title: `Disable ${u.name}?`,
+        message: 'They will not be able to log in until re-enabled. Assignments remain unchanged — use Temporary Access to cover their customers.',
+        confirmText: 'Disable',
+      });
+      if (!ok) return;
+    }
     try {
       await api.patch(`/users/${u._id}`, { status: u.status === 'ACTIVE' ? 'DISABLED' : 'ACTIVE' });
       toast(u.status === 'ACTIVE'

@@ -5,9 +5,11 @@ import { useSocketEvent } from '../../socket/socket.jsx';
 import { EmptyState, PageLoader, PageHead, useToast } from '../../components/ui.jsx';
 import Icon from '../../components/icons.jsx';
 import { fullNameDate, timeAgo } from '../../utils/format';
+import { useConfirm } from '../../components/ConfirmProvider.jsx';
 
 export default function ManagerTempAccess() {
   const toast = useToast();
+  const confirm = useConfirm();
   const [items, setItems] = useState(null);
   const [employees, setEmployees] = useState([]);
   const [sourceId, setSourceId] = useState('');
@@ -86,7 +88,13 @@ export default function ManagerTempAccess() {
   };
 
   const revoke = async (id) => {
-    if (!window.confirm('Remove this temporary access? Customers return to their original employee.')) return;
+    const ok = await confirm({
+      key: 'tempaccess.remove',
+      title: 'Remove this temporary access?',
+      message: 'Customers will return to their original employee immediately.',
+      confirmText: 'Remove',
+    });
+    if (!ok) return;
     try {
       await api.delete(`/temporary-access/${id}`);
       toast('Temporary access removed.', 'success');

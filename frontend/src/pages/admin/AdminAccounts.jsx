@@ -3,9 +3,11 @@ import api from '../../services/api';
 import { EmptyState, Modal, PageLoader, PageHead, useToast } from '../../components/ui.jsx';
 import Icon from '../../components/icons.jsx';
 import { PLATFORM_LABELS } from '../../utils/format';
+import { useConfirm } from '../../components/ConfirmProvider.jsx';
 
 export default function AdminAccounts() {
   const toast = useToast();
+  const confirm = useConfirm();
   const [platforms, setPlatforms] = useState([]);
   const [accounts, setAccounts] = useState(null);
   const [creating, setCreating] = useState(false);
@@ -52,7 +54,13 @@ export default function AdminAccounts() {
   };
 
   const removeAccount = async (a) => {
-    if (!window.confirm(`Delete account "${a.name}"?`)) return;
+    const ok = await confirm({
+      key: 'account.delete',
+      title: `Delete account "${a.name}"?`,
+      message: 'Chats and customers linked to this account will disappear from this inbox. This cannot be undone.',
+      confirmText: 'Delete',
+    });
+    if (!ok) return;
     try {
       await api.delete(`/accounts/${a._id}`);
       toast('Account deleted.', 'success');

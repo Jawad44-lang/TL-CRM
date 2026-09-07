@@ -4,9 +4,11 @@ import api from '../../services/api';
 import { useSocketEvent } from '../../socket/socket.jsx';
 import { Avatar, EmptyState, Modal, PageLoader, PageHead, useToast } from '../../components/ui.jsx';
 import Icon from '../../components/icons.jsx';
+import { useConfirm } from '../../components/ConfirmProvider.jsx';
 
 export default function AdminUsers() {
   const toast = useToast();
+  const confirm = useConfirm();
   const [role, setRole] = useState('MANAGER');
   const [items, setItems] = useState(null);
   const [managers, setManagers] = useState([]);
@@ -68,6 +70,15 @@ export default function AdminUsers() {
   };
 
   const toggleStatus = async (u) => {
+    if (u.status === 'ACTIVE') {
+      const ok = await confirm({
+        key: 'user.disable',
+        title: `Disable ${u.name}?`,
+        message: 'They will not be able to log in until re-enabled. Customer assignments remain unchanged.',
+        confirmText: 'Disable',
+      });
+      if (!ok) return;
+    }
     try {
       const status = u.status === 'ACTIVE' ? 'DISABLED' : 'ACTIVE';
       await api.patch(`/users/${u._id}`, { status });
@@ -81,7 +92,13 @@ export default function AdminUsers() {
   };
 
   const removeUser = async (u) => {
-    if (!window.confirm(`Delete ${u.name}? This cannot be undone.`)) return;
+    const ok = await confirm({
+      key: 'user.delete',
+      title: `Delete ${u.name}?`,
+      message: 'This permanently removes the user. This action cannot be undone.',
+      confirmText: 'Delete',
+    });
+    if (!ok) return;
     try {
       await api.delete(`/users/${u._id}`);
       toast('User deleted.', 'success');

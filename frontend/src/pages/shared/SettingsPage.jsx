@@ -2,12 +2,20 @@ import { useState } from 'react';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { Avatar, PageHead, useToast } from '../../components/ui.jsx';
+import { getConfirmSkipCount, resetConfirmSkips } from '../../components/ConfirmProvider.jsx';
 
 export default function SettingsPage() {
   const { user } = useAuth();
   const toast = useToast();
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
+  const [skipCount, setSkipCount] = useState(getConfirmSkipCount());
+
+  const reenableConfirms = () => {
+    resetConfirmSkips();
+    setSkipCount(0);
+    toast('All confirmation popups are back on.', 'success');
+  };
 
   const changePassword = async (e) => {
     e.preventDefault();
@@ -52,6 +60,17 @@ export default function SettingsPage() {
           </div>
           <button className="btn" type="submit" disabled={busy}>{busy ? 'Saving...' : 'Update password'}</button>
         </form>
+      </div>
+
+      <div className="card" style={{ maxWidth: 640 }}>
+        <h3 className="card-title">Confirmation popups</h3>
+        <p className="small muted" style={{ marginTop: 0 }}>
+          Dangerous actions (delete, disable, log out…) ask for confirmation first. Agar tumne kisi action pe
+          &quot;Don&apos;t show me again&quot; tick kiya tha, to sirf wohi popup skip hota hai — yahan se sab wapas on kar sakte ho.
+        </p>
+        <button className="btn btn-ghost" type="button" onClick={reenableConfirms} disabled={skipCount === 0}>
+          Re-enable all confirmation popups{skipCount > 0 ? ` (${skipCount} turned off)` : ''}
+        </button>
       </div>
 
       <div className="card" style={{ maxWidth: 640 }}>

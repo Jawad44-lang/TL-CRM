@@ -6,6 +6,7 @@ import { useTheme } from '../context/ThemeContext.jsx';
 import { useSocket, useSocketEvent } from '../socket/socket.jsx';
 import { useToast } from '../components/ui.jsx';
 import LogoMark from '../components/Logo.jsx';
+import { useConfirm } from '../components/ConfirmProvider.jsx';
 import Icon from '../components/icons.jsx';
 import { timeAgo } from '../utils/format';
 
@@ -74,6 +75,7 @@ export default function AppLayout() {
   const { connected } = useSocket();
   const navigate = useNavigate();
   const toast = useToast();
+  const confirm = useConfirm();
   const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 1100px)').matches);
   const [sidebarOpen, setSidebarOpen] = useState(() => !window.matchMedia('(max-width: 1100px)').matches);
   const [unread, setUnread] = useState(0);
@@ -221,7 +223,15 @@ export default function AppLayout() {
             type="button"
             className="rail-nav-item rail-btn-item logout-item"
             title="Log Out"
-            onClick={() => logout().then(() => navigate('/login'))}
+            onClick={async () => {
+              const ok = await confirm({
+                key: 'logout',
+                title: 'Log out?',
+                message: 'You will need to sign in again to access the CRM.',
+                confirmText: 'Log out',
+              });
+              if (ok) logout().then(() => navigate('/login'));
+            }}
           >
             <Icon name="log-out" size={19} />
             <span className="rail-tooltip">Log out</span>
