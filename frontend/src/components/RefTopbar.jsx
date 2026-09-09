@@ -10,7 +10,7 @@ import { useTheme } from '../context/ThemeContext.jsx';
 const TABS = {
   ADMIN: [
     { label: 'Dashboard', path: '/admin/overview' },
-    { label: 'Employees', path: '/admin/users' },
+    { label: 'Team', path: '/admin/users' },
     { label: 'Attendance', path: '/admin/attendance' },
     { label: 'Reports', path: '/admin/activity' },
     { label: 'Chat', path: '/admin/chats' },

@@ -3,7 +3,7 @@ import Conversation from '../models/Conversation.js';
 import ApiError from '../utils/ApiError.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import { assertGroupAccess, visibleGroupQuery } from '../services/permission/permissionService.js';
-import { assignGroupMembers, removeGroupMember } from '../services/assignment/groupService.js';
+import { setGroupMembers, removeGroupMember } from '../services/assignment/groupService.js';
 import { escapeRegex } from '../utils/regex.js';
 
 // GET /api/groups
@@ -33,11 +33,18 @@ export const getGroup = asyncHandler(async (req, res) => {
   res.json({ success: true, group, conversationId: conv?._id ? String(conv._id) : null });
 });
 
-// POST /api/groups/:id/assign { employeeIds: [] }
+// POST /api/groups/:id/assign { employeeIds: [] } — syncs the FULL member list (adds + removes)
 export const assignGroup = asyncHandler(async (req, res) => {
   const { employeeIds = [] } = req.body || {};
-  const group = await assignGroupMembers(req.user, req.params.id, employeeIds);
-  res.json({ success: true, message: 'Employees added to group.', group });
+  const { group, added, removed } = await setGroupMembers(req.user, req.params.id, employeeIds);
+  const parts = [];
+  if (added.length) parts.push(`${added.length} added`);
+  if (removed.length) parts.push(`${removed.length} removed`);
+  res.json({
+    success: true,
+    message: parts.length ? `Group members updated — ${parts.join(', ')}.` : 'No changes to save.',
+    group,
+  });
 });
 
 // DELETE /api/groups/:id/assign/:employeeId

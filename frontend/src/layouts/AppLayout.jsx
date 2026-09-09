@@ -25,7 +25,7 @@ const NAV = {
     {
       label: 'Administration',
       items: [
-        ['/admin/users', 'Users', 'users'],
+        ['/admin/users', 'Team', 'users'],
         ['/admin/platforms', 'Platforms', 'plug'],
         ['/admin/permissions', 'Permissions', 'key'],
         ['/admin/attendance', 'Attendance', 'calendar'],

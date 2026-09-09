@@ -8,6 +8,7 @@ const ACTION_BADGES = {
   USER_CREATED: 'badge-sky', USER_DELETED: 'badge-red', USER_UPDATED: 'badge-gray',
   EMPLOYEE_DISABLED: 'badge-red', PERMISSION_GRANTED: 'badge-green', PERMISSION_REVOKED: 'badge-amber',
   CUSTOMER_ASSIGNED: 'badge-indigo', CUSTOMER_REASSIGNED: 'badge-amber', GROUP_ASSIGNED: 'badge-indigo',
+  GROUP_REMOVED: 'badge-amber', GROUP_MEMBERS_UPDATED: 'badge-indigo',
   TEMP_ACCESS_GRANTED: 'badge-green', TEMP_ACCESS_REMOVED: 'badge-red', MESSAGE_SENT: 'badge-gray',
   ACCOUNT_CREATED: 'badge-sky', MESSAGE_READ: 'badge-gray',
 };

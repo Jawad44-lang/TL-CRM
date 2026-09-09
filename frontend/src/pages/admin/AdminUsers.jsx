@@ -54,10 +54,10 @@ export default function AdminUsers() {
         const payload = { name: form.name, email: form.email, phone: form.phone };
         if (form.password) payload.password = form.password;
         await api.patch(`/users/${editing._id}`, payload);
-        toast('User updated.', 'success');
+        toast('Team member updated.', 'success');
       } else {
         await api.post('/users', form);
-        toast('User created.', 'success');
+        toast('Team member created.', 'success');
       }
       setCreating(false);
       setEditing(null);
@@ -84,7 +84,7 @@ export default function AdminUsers() {
       await api.patch(`/users/${u._id}`, { status });
       toast(u.role === 'EMPLOYEE' && status === 'DISABLED'
         ? 'Employee disabled — their customer assignments remain unchanged.'
-        : 'User updated.', 'success');
+        : 'Team member updated.', 'success');
       load();
     } catch (e) {
       toast(e.message, 'error');
@@ -101,7 +101,7 @@ export default function AdminUsers() {
     if (!ok) return;
     try {
       await api.delete(`/users/${u._id}`);
-      toast('User deleted.', 'success');
+      toast('Team member deleted.', 'success');
       load();
     } catch (e) {
       toast(e.message, 'error');
@@ -111,8 +111,8 @@ export default function AdminUsers() {
   return (
     <div className="page">
       <PageHead
-        title="Users"
-        sub="Create managers, manage employees, control access and status."
+        title="Team"
+        sub="Managers and employees — everyone working in your company, in one place."
         actions={
           <button className="btn" type="button" onClick={openCreate}>
             <Icon name="user-plus" size={14} />
@@ -130,10 +130,10 @@ export default function AdminUsers() {
               </button>
             ))}
           </div>
-          <span className="badge badge-gray">{(items || []).length} users</span>
+          <span className="badge badge-gray">{(items || []).length} members</span>
         </div>
 
-        {!items && <PageLoader text="Loading users..." />}
+        {!items && <PageLoader text="Loading team..." />}
         {items && items.length === 0 && <EmptyState icon="users" title={`No ${role.toLowerCase()}s yet`} sub={`Create your first ${role.toLowerCase()} to get started.`} />}
 
         {items && items.length > 0 && (
@@ -141,7 +141,7 @@ export default function AdminUsers() {
             <table className="data">
               <thead>
                 <tr>
-                  <th>User</th>
+                  <th>Member</th>
                   <th>Email</th>
                   <th>{role === 'EMPLOYEE' ? 'Manager' : 'Team Size'}</th>
                   <th>Status</th>
@@ -218,7 +218,7 @@ export default function AdminUsers() {
             )}
             <div className="modal-actions">
               <button type="button" className="btn btn-ghost" onClick={() => { setCreating(false); setEditing(null); }}>Cancel</button>
-              <button type="submit" className="btn" disabled={busy}>{busy ? 'Saving...' : editing ? 'Save changes' : 'Create user'}</button>
+              <button type="submit" className="btn" disabled={busy}>{busy ? 'Saving...' : editing ? 'Save changes' : 'Create member'}</button>
             </div>
           </form>
         </Modal>
