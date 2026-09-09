@@ -6,8 +6,6 @@ import { Avatar, EmptyState, PageLoader, useToast } from './ui.jsx';
 import Icon from './icons.jsx';
 import { clockTime, dayLabel, timeAgo, PLATFORM_LABELS } from '../utils/format';
 
-const ROLE_CHIP = { MANAGER: 'chip-manager', ADMIN: 'chip-admin', EMPLOYEE: 'chip-employee', CUSTOMER: 'chip-customer' };
-
 export default function ChatUI() {
   const { user } = useAuth();
   const { joinConversation, leaveConversation, typing } = useSocket();
@@ -18,6 +16,9 @@ export default function ChatUI() {
   const [tab, setTab] = useState('ALL');
   const [search, setSearch] = useState('');
   const [activeId, setActiveId] = useState(null);
+  const [mainTab, setMainTab] = useState('messages'); // 'messages' | 'participants'
+  const [sharedFiles, setSharedFiles] = useState([]);
+  const [filesTotal, setFilesTotal] = useState(0);
   const [detail, setDetail] = useState(null);
   const [messages, setMessages] = useState([]);
   const [hasMore, setHasMore] = useState(false);
@@ -40,11 +41,18 @@ export default function ChatUI() {
       setLoadingMsgs(true);
       setDetail(null);
       setMessages([]);
+      setMainTab('messages');
       try {
-        const [d, m] = await Promise.all([api.get(`/conversations/${id}`), api.get(`/messages/${id}?limit=30`)]);
+        const [d, m, f] = await Promise.all([
+          api.get(`/conversations/${id}`),
+          api.get(`/messages/${id}?limit=30`),
+          api.get(`/conversations/${id}/files`).catch(() => ({ data: { items: [], total: 0 } })),
+        ]);
         setDetail(d.data);
         setMessages(m.data.items);
         setHasMore(m.data.hasMore);
+        setSharedFiles(f.data.items || []);
+        setFilesTotal(f.data.total || 0);
         joinConversation(id);
         api.post(`/conversations/${id}/read`).catch(() => {});
         setConversations((prev) => prev.map((c) => (c._id === id ? { ...c, unread: false } : c)));
@@ -92,6 +100,10 @@ export default function ChatUI() {
     const cid = String(conversationId);
     if (cid === activeIdRef.current) {
       setMessages((prev) => (prev.some((x) => x._id === message._id) ? prev : [...prev, message]));
+      if (message.media) {
+        setSharedFiles((prev) => (prev.some((x) => x._id === message._id) ? prev : [message, ...prev]));
+        setFilesTotal((t) => t + 1);
+      }
       api.post(`/conversations/${cid}/read`).catch(() => {});
     } else if (conversation) {
       setConversations((prev) => {
@@ -107,6 +119,10 @@ export default function ChatUI() {
     const cid = String(conversationId);
     if (cid !== activeIdRef.current) return;
     setMessages((prev) => (prev.some((x) => x._id === message._id) ? prev : [...prev, message]));
+    if (message.media) {
+      setSharedFiles((prev) => (prev.some((x) => x._id === message._id) ? prev : [message, ...prev]));
+      setFilesTotal((t) => t + 1);
+    }
     setConversations((prev) =>
       prev.map((c) =>
         c._id === cid
@@ -244,6 +260,9 @@ export default function ChatUI() {
     setDetail(null);
     setMessages([]);
     setDraft('');
+    setSharedFiles([]);
+    setFilesTotal(0);
+    setMainTab('messages');
   };
 
   /* ------------------------------ Render ------------------------------ */
@@ -266,6 +285,15 @@ export default function ChatUI() {
   const typingNames = Object.values(typingMap);
   const lastOutgoing = [...messages].reverse().find((m) => m.direction === 'OUTGOING');
   const readChips = ((detail && detail.participants) || []).filter((p) => !p.isMe);
+  const participants = (detail && detail.participants) || [];
+  const avatarColorFor = (m) => {
+    if (m.senderType === 'CUSTOMER') return '#0EA5E9';
+    const p = participants.find((x) => x.userId === String(m.senderId));
+    return (p && p.avatarColor) || '#7367f0';
+  };
+  const photoFiles = sharedFiles.filter((f) => f.media && f.media.type === 'image');
+  const docFiles = sharedFiles.filter((f) => f.media && f.media.type === 'file');
+  const heroImage = photoFiles[0] || null;
 
   const senderName = (m) => {
     if (m.senderType === 'CUSTOMER') return (conv && conv.customer && conv.customer.name) || 'Customer';
@@ -287,11 +315,39 @@ export default function ChatUI() {
     : '';
 
   return (
-    <div className={`chat-shell ${activeId ? 'with-thread' : 'with-list'}`}>
+    <div className={`chat-shell chat-3col ${activeId ? 'with-thread' : 'with-list'}`}>
       <aside className="chat-side">
+        {/* Contact profile card (reference layout — top of left panel) */}
+        <div className="chat-contact-card">
+          {conv ? (
+            <>
+              <div className="chat-contact-avatar-wrap">
+                <Avatar name={headName || '?'} color={conv.conversationType === 'GROUP' ? '#7C6CF6' : '#0EA5E9'} size="xl" />
+                {conv.conversationType === 'CUSTOMER' && (
+                  <span className={`chat-presence ${conv.customer?.isOnline ? 'on' : ''}`} title={conv.customer?.isOnline ? 'Online' : 'Offline'} />
+                )}
+              </div>
+              <div className="chat-contact-name">{headName}</div>
+              <span className="chat-contact-role">
+                {conv.conversationType === 'GROUP'
+                  ? `Group · ${conv.group?.memberEmployeeIds?.length || 0} members`
+                  : PLATFORM_LABELS[conv.customer?.platformKey] || 'Customer chat'}
+              </span>
+            </>
+          ) : (
+            <>
+              <Avatar name={user.name} color={user.avatarColor || '#7367f0'} size="xl" />
+              <div className="chat-contact-name">{user.name}</div>
+              <span className="chat-contact-role">{user.role}</span>
+            </>
+          )}
+        </div>
         <div className="chat-side-head">
-          <div className="chat-side-title">{user.role === 'EMPLOYEE' ? 'Your Chats' : 'Conversations'}</div>
           <input className="chat-search" placeholder="Search chats..." value={search} onChange={(e) => setSearch(e.target.value)} />
+        </div>
+        <div className="chat-side-caption">
+          <span>Last chats</span>
+          <span className="chat-side-count">{visible.length}</span>
         </div>
         <div className="chat-tabs">
           {[['ALL', 'All'], ['CUSTOMER', 'Customers'], ['GROUP', 'Groups'], ['UNREAD', 'Unread']].map(([k, l]) => (
@@ -355,6 +411,14 @@ export default function ChatUI() {
                 <div className="chat-main-sub">{subLine}</div>
               </div>
               <div className="chat-main-actions">
+                <div className="chat-mode-tabs">
+                  <button type="button" className={`chat-mode-tab ${mainTab === 'messages' ? 'active' : ''}`} onClick={() => setMainTab('messages')}>
+                    Messages
+                  </button>
+                  <button type="button" className={`chat-mode-tab ${mainTab === 'participants' ? 'active' : ''}`} onClick={() => setMainTab('participants')}>
+                    Participants
+                  </button>
+                </div>
                 {canResolve && (
                   <button className="btn btn-sm btn-ghost" type="button" onClick={toggleResolve}>
                     {conv.status === 'RESOLVED' ? 'Reopen' : 'Resolve'}
@@ -363,7 +427,39 @@ export default function ChatUI() {
               </div>
             </div>
 
-            <div className="chat-messages" ref={scrollRef}>
+            {mainTab === 'participants' ? (
+              <div className="chat-participants">
+                {participants.length === 0 && (
+                  <div className="empty-state" style={{ padding: '32px 16px' }}>
+                    <div className="empty-icon"><Icon name="users-round" size={24} /></div>
+                    <h4>No participants</h4>
+                    <p>Internal team members on this chat will appear here.</p>
+                  </div>
+                )}
+                {participants.map((p) => {
+                  const didRead = Boolean(p.lastReadMessageId && lastOutgoing && p.lastReadMessageId === lastOutgoing._id);
+                  return (
+                    <div key={p.userId} className="chat-participant-row">
+                      <Avatar name={p.name} color={p.avatarColor || '#7367f0'} size="md" />
+                      <div className="chat-participant-main">
+                        <div className="chat-participant-name">
+                          {p.name}
+                          {p.isMe && <span className="chat-participant-you">You</span>}
+                        </div>
+                        <div className="chat-participant-sub">{p.role}</div>
+                      </div>
+                      {didRead && (
+                        <span className="chat-participant-read">
+                          <Icon name="check" size={12} /> Read
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <>
+                <div className="chat-messages" ref={scrollRef}>
               {hasMore && (
                 <button className="btn btn-sm btn-ghost load-older" type="button" onClick={loadOlder}>Load older messages</button>
               )}
@@ -380,29 +476,28 @@ export default function ChatUI() {
                   <div key={m._id}>
                     {showDay && <div className="day-sep"><span>{dayLabel(m.timestamp)}</span></div>}
                     <div className={`msg-row ${out ? 'out' : 'in'}`}>
-                      <div className={`bubble ${out ? 'out' : 'in'}`}>
-                        {out && String(m.senderId) !== String(user._id) && (
-                          <div>
-                            <span className={`sender-chip ${ROLE_CHIP[m.senderType] || 'chip-employee'}`}>
-                              {m.senderType} · {senderName(m)}
-                            </span>
-                          </div>
-                        )}
-                        {m.media && m.media.type === 'image' && <img className="media-img" src={m.media.url} alt={m.media.name || 'attachment'} />}
-                        {m.content}
-                        <div className="msg-time">{clockTime(m.timestamp)}</div>
-                        {isLastOut && readChips.length > 0 && (
-                          <div className="read-chips">
-                            {readChips.map((p) => {
-                              const read = p.lastReadMessageId && lastOutgoing && p.lastReadMessageId === lastOutgoing._id;
-                              return (
-                                <span key={p.userId} className={`read-chip ${read ? 'read' : 'unread'}`}>
-                                  <span className="dot" />{p.name}
-                                </span>
-                              );
-                            })}
-                          </div>
-                        )}
+                      <div className="msg-col">
+                        <div className="msg-meta">
+                          {!out && <Avatar name={senderName(m)} color={avatarColorFor(m)} size="sm" />}
+                          <span className="msg-meta-name">{senderName(m)}</span>
+                          <span className="msg-meta-time">{clockTime(m.timestamp)}</span>
+                        </div>
+                        <div className={`bubble ${out ? 'out' : 'in'}`}>
+                          {m.media && m.media.type === 'image' && <img className="media-img" src={m.media.url} alt={m.media.name || 'attachment'} />}
+                          {m.content}
+                          {isLastOut && readChips.length > 0 && (
+                            <div className="read-chips">
+                              {readChips.map((p) => {
+                                const read = p.lastReadMessageId && lastOutgoing && p.lastReadMessageId === lastOutgoing._id;
+                                return (
+                                  <span key={p.userId} className={`read-chip ${read ? 'read' : 'unread'}`}>
+                                    <span className="dot" />{p.name}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -432,10 +527,84 @@ export default function ChatUI() {
               <button className="chat-send" type="button" onClick={() => send()} disabled={!canSend || sending || !draft.trim()}>
                 <Icon name="send" size={16} />
               </button>
-            </div>
+                </div>
+              </>
+            )}
           </>
         )}
       </section>
+
+      {/* RIGHT PANEL — Shared files (reference layout) */}
+      <aside className="chat-files">
+        <div className="chat-files-head">
+          <span className="chat-files-title">Shared files</span>
+          <span className="chat-files-badge">{filesTotal}</span>
+        </div>
+        {!activeId || filesTotal === 0 ? (
+          <div className="chat-files-empty">
+            <EmptyState icon="paperclip" title="No shared files" sub="Images and files shared in this chat will appear here." />
+          </div>
+        ) : (
+          <div className="chat-files-body">
+            {heroImage && (
+              <div className="chat-files-hero">
+                <img src={heroImage.media.url} alt={heroImage.media.name || 'shared file'} />
+                <div className="chat-files-hero-name">{heroImage.media.name || 'Image'}</div>
+                <div className="chat-files-hero-sub">{photoFiles.length} {photoFiles.length === 1 ? 'photo' : 'photos'}</div>
+              </div>
+            )}
+            <div className="chat-files-stats">
+              <div className="chat-files-stat">
+                <span className="chat-files-stat-label">All Files</span>
+                <b className="chat-files-stat-value">{filesTotal}</b>
+              </div>
+              <div className="chat-files-stat">
+                <span className="chat-files-stat-label">Photos</span>
+                <b className="chat-files-stat-value">{photoFiles.length}</b>
+              </div>
+            </div>
+            <div className="chat-files-caption">File type</div>
+            <div className="chat-file-types">
+              {photoFiles.length > 0 && (
+                <div className="chat-file-type-row">
+                  <span className="chat-file-type-icon is-photo"><Icon name="image" size={15} /></span>
+                  <div className="chat-file-type-main">
+                    <div className="chat-file-type-name">Photos</div>
+                    <div className="chat-file-type-sub">{photoFiles.length} files</div>
+                  </div>
+                  <Icon name="chevron-right" size={14} />
+                </div>
+              )}
+              {docFiles.length > 0 && (
+                <div className="chat-file-type-row">
+                  <span className="chat-file-type-icon is-doc"><Icon name="document" size={15} /></span>
+                  <div className="chat-file-type-main">
+                    <div className="chat-file-type-name">Documents</div>
+                    <div className="chat-file-type-sub">{docFiles.length} files</div>
+                  </div>
+                  <Icon name="chevron-right" size={14} />
+                </div>
+              )}
+            </div>
+            <div className="chat-files-caption">Recent</div>
+            <div className="chat-files-list">
+              {sharedFiles.slice(0, 12).map((f) => (
+                <a key={f._id} className="chat-file-row" href={f.media?.url} target="_blank" rel="noreferrer">
+                  {f.media?.type === 'image' ? (
+                    <img className="chat-file-thumb" src={f.media.url} alt="" />
+                  ) : (
+                    <span className="chat-file-thumb is-doc"><Icon name="document" size={15} /></span>
+                  )}
+                  <div className="chat-file-main">
+                    <div className="chat-file-name">{f.media?.name || 'Attachment'}</div>
+                    <div className="chat-file-sub">{dayLabel(f.timestamp)} · {clockTime(f.timestamp)}</div>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+      </aside>
     </div>
   );
 

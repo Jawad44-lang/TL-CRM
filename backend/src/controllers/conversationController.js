@@ -1,4 +1,5 @@
 import Conversation from '../models/Conversation.js';
+import Message from '../models/Message.js';
 import ReadStatus from '../models/ReadStatus.js';
 import User from '../models/User.js';
 import ConnectedAccount from '../models/ConnectedAccount.js';
@@ -157,5 +158,17 @@ export const getConversation = asyncHandler(async (req, res) => {
       isMe: String(u._id) === String(req.user._id),
     })),
   });
+});
+
+// GET /api/conversations/:id/files — media shared inside a conversation (chat "Shared files" panel)
+export const getConversationFiles = asyncHandler(async (req, res) => {
+  const { assertConversationAccess } = await import('../services/permission/permissionService.js');
+  await assertConversationAccess(req.user, req.params.id, 'VIEW');
+  const mediaQuery = { conversationId: req.params.id, 'media.type': { $in: ['image', 'file'] } };
+  const [items, total] = await Promise.all([
+    Message.find(mediaQuery).sort({ timestamp: -1 }).limit(60).select('media direction senderType senderId timestamp'),
+    Message.countDocuments(mediaQuery),
+  ]);
+  res.json({ success: true, total, items });
 });
 

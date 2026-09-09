@@ -63,6 +63,7 @@ const ICON_MAP = {
   trash: Icons.Trash,
   'user-plus': Icons.UserPlus,
   inbox: Icons.Tray,
+  image: Icons.Image,
   'external-link': Icons.ArrowSquareOut,
   'land-plot': Icons.MapTrifold,
   eye: Icons.Eye,

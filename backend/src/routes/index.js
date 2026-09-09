@@ -42,6 +42,7 @@ r.post('/customers/:id/reassign', protect, requireRole('ADMIN', 'MANAGER', 'EMPL
 /* --------------------------- Conversations -------------------------- */
 r.get('/conversations', protect, conversations.listConversations);
 r.get('/conversations/:id', protect, conversations.getConversation);
+r.get('/conversations/:id/files', protect, conversations.getConversationFiles);
 r.post('/conversations/:id/read', protect, conversations.markRead);
 r.post('/conversations/:id/resolve', protect, conversations.toggleResolve);
 

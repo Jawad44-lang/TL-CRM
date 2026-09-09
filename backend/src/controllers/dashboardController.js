@@ -22,7 +22,11 @@ export const getDashboard = asyncHandler(async (req, res) => {
   const user = req.user;
 
   if (user.role === 'ADMIN') {
-    const [totalManagers, totalEmployees, totalAccounts, totalCustomers, totalGroups, activeConversations, unassignedCustomers, totalMessages, recentActivity] =
+    // Month boundaries for real month-over-month trend calculations
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const [totalManagers, totalEmployees, totalAccounts, totalCustomers, totalGroups, activeConversations, unassignedCustomers, totalMessages, resolvedConversations, newUsersThisMonth, newUsersLastMonth, newCustomersThisMonth, newCustomersLastMonth, newConversationsThisMonth, newConversationsLastMonth, recentActivity] =
       await Promise.all([
         User.countDocuments({ role: 'MANAGER' }),
         User.countDocuments({ role: 'EMPLOYEE' }),
@@ -32,12 +36,35 @@ export const getDashboard = asyncHandler(async (req, res) => {
         Conversation.countDocuments({ status: 'ACTIVE' }),
         Customer.countDocuments({ assignedEmployeeId: null }),
         Message.countDocuments(),
+        Conversation.countDocuments({ status: 'RESOLVED' }),
+        User.countDocuments({ role: { $in: ['MANAGER', 'EMPLOYEE'] }, createdAt: { $gte: monthStart } }),
+        User.countDocuments({ role: { $in: ['MANAGER', 'EMPLOYEE'] }, createdAt: { $gte: lastMonthStart, $lt: monthStart } }),
+        Customer.countDocuments({ createdAt: { $gte: monthStart } }),
+        Customer.countDocuments({ createdAt: { $gte: lastMonthStart, $lt: monthStart } }),
+        Conversation.countDocuments({ createdAt: { $gte: monthStart } }),
+        Conversation.countDocuments({ createdAt: { $gte: lastMonthStart, $lt: monthStart } }),
         ActivityLog.find().sort({ at: -1 }).limit(8),
       ]);
     return res.json({
       success: true,
       role: 'ADMIN',
-      stats: { totalManagers, totalEmployees, totalAccounts, totalCustomers, totalGroups, activeConversations, unassignedCustomers, totalMessages },
+      stats: {
+        totalManagers,
+        totalEmployees,
+        totalAccounts,
+        totalCustomers,
+        totalGroups,
+        activeConversations,
+        unassignedCustomers,
+        totalMessages,
+        resolvedConversations,
+        newUsersThisMonth,
+        newUsersLastMonth,
+        newCustomersThisMonth,
+        newCustomersLastMonth,
+        newConversationsThisMonth,
+        newConversationsLastMonth,
+      },
       recentActivity,
     });
   }

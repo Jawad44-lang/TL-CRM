@@ -14,9 +14,16 @@ export default function WorkforceDashboard({ role = 'ADMIN' }) {
   // Top navigation tabs (the global RefTopbar now lives in AppLayout)
   const [scheduleFilter, setScheduleFilter] = useState('Today');
   const [scheduleDropdownOpen, setScheduleDropdownOpen] = useState(false);
-  const [dateLabel, setDateLabel] = useState('28 Apr, 2026');
   const [filterActive, setFilterActive] = useState(false);
   const [employeeSearch, setEmployeeSearch] = useState('');
+
+  // Live date for the navbar pill — always today's correct date (auto-refreshes, even past midnight)
+  const [today, setToday] = useState(() => new Date());
+  useEffect(() => {
+    const t = setInterval(() => setToday(new Date()), 30 * 1000);
+    return () => clearInterval(t);
+  }, []);
+  const dateLabel = `${String(today.getDate()).padStart(2, '0')} ${today.toLocaleString('en-US', { month: 'short' })}, ${today.getFullYear()}`;
 
   // Modals
   const [simOpen, setSimOpen] = useState(false);
@@ -148,6 +155,34 @@ export default function WorkforceDashboard({ role = 'ADMIN' }) {
     return () => { mounted = false; };
   }, []);
 
+  /* Fully dynamic KPI values derived from live backend stats — no static data */
+  const kpi = useMemo(() => {
+    const s = backendStats || {};
+    const num = (v) => (typeof v === 'number' ? v : null);
+    const pct = (cur, prev) => {
+      if (num(cur) == null || num(prev) == null) return null;
+      if (prev === 0) return cur > 0 ? 100 : 0;
+      return Math.round(((cur - prev) / prev) * 1000) / 10;
+    };
+    const isAdminScope = s.totalEmployees != null || s.totalManagers != null;
+    const employees = isAdminScope ? (s.totalEmployees || 0) + (s.totalManagers || 0) : num(s.employees);
+    const customers = num(s.totalCustomers) ?? num(s.visibleCustomers);
+    const unassigned = num(s.unassignedCustomers);
+    const assignmentRate =
+      customers != null && unassigned != null && customers > 0
+        ? Math.round(((customers - unassigned) / customers) * 100)
+        : null;
+    return {
+      employees,
+      employeesTrend: pct(s.newUsersThisMonth, s.newUsersLastMonth),
+      activeChats: num(s.activeConversations),
+      chatsTrend: pct(s.newConversationsThisMonth, s.newConversationsLastMonth),
+      assignmentRate,
+      customers,
+      customersTrend: pct(s.newCustomersThisMonth, s.newCustomersLastMonth),
+    };
+  }, [backendStats]);
+
   // Merge default reference employees with live CRM employees for rich display
   const allEmployees = useMemo(() => {
     const list = [...defaultEmployees];
@@ -222,20 +257,11 @@ export default function WorkforceDashboard({ role = 'ADMIN' }) {
             <span>Add Employee</span>
           </button>
 
-          {/* Date Pill (28 Apr, 2026) */}
-          <button
-            className="ref-outline-pill-btn"
-            type="button"
-            onClick={() => {
-              const now = new Date();
-              const formatted = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-              setDateLabel(formatted);
-              toast(`Date set to ${formatted}`, 'info');
-            }}
-          >
+          {/* Date Pill — always shows today's date */}
+          <div className="ref-outline-pill-btn as-static" title="Today">
             <Icon name="calendar" size={16} />
             <span>{dateLabel}</span>
-          </button>
+          </div>
 
           {/* Filter Pill */}
           <button
@@ -264,7 +290,7 @@ export default function WorkforceDashboard({ role = 'ADMIN' }) {
 
       {/* 4 Stat / KPI Cards Grid */}
       <section className="ref-kpi-grid">
-        {/* Card 1: Total Employees */}
+        {/* Card 1: Total Employees (live workforce = managers + employees) */}
         <div className="ref-kpi-card">
           <div className="ref-kpi-head">
             <div className="ref-kpi-icon-circle icon-purple">
@@ -274,50 +300,57 @@ export default function WorkforceDashboard({ role = 'ADMIN' }) {
           </div>
           <div className="ref-kpi-body">
             <span className="ref-kpi-value">
-              {backendStats?.totalEmployees ? backendStats.totalEmployees + 1585 : '1,589'}
+              {kpi.employees != null ? kpi.employees.toLocaleString() : '—'}
             </span>
-            <span className="ref-kpi-trend-pill trend-green">
-              +5.6%
-            </span>
+            {kpi.employeesTrend != null && (
+              <span className={`ref-kpi-trend-pill ${kpi.employeesTrend < 0 ? 'trend-red' : 'trend-green'}`}>
+                {kpi.employeesTrend >= 0 ? '+' : ''}
+                {kpi.employeesTrend}%
+              </span>
+            )}
           </div>
           <div className="ref-kpi-foot">from last month</div>
         </div>
 
-        {/* Card 2: Sales Revenue */}
+        {/* Card 2: Active Chats (live conversations) */}
         <div className="ref-kpi-card">
           <div className="ref-kpi-head">
             <div className="ref-kpi-icon-circle icon-green">
-              <Icon name="dollar" size={18} weight="bold" />
+              <Icon name="messages-square" size={18} weight="bold" />
             </div>
-            <span className="ref-kpi-label">Sales Revenue</span>
+            <span className="ref-kpi-label">Active Chats</span>
           </div>
           <div className="ref-kpi-body">
-            <span className="ref-kpi-value">$160,000</span>
-            <span className="ref-kpi-trend-pill trend-green">
-              +7.9%
+            <span className="ref-kpi-value">
+              {kpi.activeChats != null ? kpi.activeChats.toLocaleString() : '—'}
             </span>
+            {kpi.chatsTrend != null && (
+              <span className={`ref-kpi-trend-pill ${kpi.chatsTrend < 0 ? 'trend-red' : 'trend-green'}`}>
+                {kpi.chatsTrend >= 0 ? '+' : ''}
+                {kpi.chatsTrend}%
+              </span>
+            )}
           </div>
-          <div className="ref-kpi-foot">Total Revenue</div>
+          <div className="ref-kpi-foot">Live conversations</div>
         </div>
 
-        {/* Card 3: Submission Rate */}
+        {/* Card 3: Assignment Rate (% of customers assigned to an employee) */}
         <div className="ref-kpi-card">
           <div className="ref-kpi-head">
             <div className="ref-kpi-icon-circle icon-coral">
-              <Icon name="refresh" size={18} weight="bold" />
+              <Icon name="check" size={18} weight="bold" />
             </div>
-            <span className="ref-kpi-label">Submission Rate</span>
+            <span className="ref-kpi-label">Assignment Rate</span>
           </div>
           <div className="ref-kpi-body">
-            <span className="ref-kpi-value">67%</span>
-            <span className="ref-kpi-trend-pill trend-green">
-              +5.6%
+            <span className="ref-kpi-value">
+              {kpi.assignmentRate != null ? `${kpi.assignmentRate}%` : '—'}
             </span>
           </div>
-          <div className="ref-kpi-foot">Profile</div>
+          <div className="ref-kpi-foot">Customers assigned</div>
         </div>
 
-        {/* Card 4: Sales Leads */}
+        {/* Card 4: Sales Leads (live customers) */}
         <div className="ref-kpi-card">
           <div className="ref-kpi-head">
             <div className="ref-kpi-icon-circle icon-orange">
@@ -327,10 +360,16 @@ export default function WorkforceDashboard({ role = 'ADMIN' }) {
           </div>
           <div className="ref-kpi-body">
             <span className="ref-kpi-value">
-              {backendStats?.totalCustomers ? backendStats.totalCustomers + 45 : '56'}
+              {kpi.customers != null ? kpi.customers.toLocaleString() : '—'}
             </span>
+            {kpi.customersTrend != null && (
+              <span className={`ref-kpi-trend-pill ${kpi.customersTrend < 0 ? 'trend-red' : 'trend-green'}`}>
+                {kpi.customersTrend >= 0 ? '+' : ''}
+                {kpi.customersTrend}%
+              </span>
+            )}
           </div>
-          <div className="ref-kpi-foot">Positions</div>
+          <div className="ref-kpi-foot">Total customers</div>
         </div>
       </section>
 
