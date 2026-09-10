@@ -522,5 +522,84 @@ Full audit trail of system events — assignments, grants, account changes, mess
 - ✅ Turn `DEMO_MODE=false` before going live so demo endpoints are disabled at the route level.
 
 ---
-<!-- PART8 -->
+
+## 13. Manager Guide
+
+**Who is this for:** team leads / supervisors. A manager sees and manages **only their own team** — automatically, based on the hierarchy set by the admin.
+
+### 13.1 Overview (`Overview`)
+Your team dashboard: your employees, their workload, unassigned customers, active conversations, and your team's attendance snapshot.
+
+### 13.2 Adding Team Members (`New`)
+Create employee accounts directly from the manager panel. New employees automatically report to you and inherit team-level visibility.
+
+### 13.3 Managing Employees (`Employees`)
+- Browse your team, open any **Employee Profile** to see their assigned customers, message activity, attendance, and performance.
+- Reassign customers between team members when workloads become unbalanced.
+
+### 13.4 Customers & Assignment
+- See all customers of your team's accounts — including **Unassigned** ones (highlighted so none are missed).
+- **Assign** a new customer to an employee; **Reassign** with a recorded reason. Every change is written to AssignmentHistory.
+
+### 13.5 Groups
+View groups on your accounts, see which employees are members, and manage membership (add/remove team members).
+
+### 13.6 Chats
+Your unified inbox: your team's customer chats and group chats. You can read everything your team handles and reply as the business account when escalation is needed.
+
+### 13.7 Granting Permissions
+- Create Access Grants for your employees — but only **within your own ceiling**: you can't grant an action you don't have on that scope.
+- Typical use: give an employee extra READ access to an account, or SEND/REPLY on one specific customer.
+
+### 13.8 Temporary Access (`Temp Access`)
+The leave-coverage tool:
+1. Choose the employee going on leave.
+2. Choose the covering employee.
+3. Choose scope: **All of their customers** or **specific customers**.
+4. Set start/end dates → save.
+Access is active only within the window and auto-expires; revoke instantly anytime.
+
+### 13.9 Attendance & Performance
+Month view for **your team only** — day-by-day attendance plus performance scores to guide reviews and workload balancing.
+
+### Manager Best Practices
+- ✅ Check "Unassigned" customers daily — new inquiries land there first.
+- ✅ Use temporary access instead of permanent grants for coverage.
+- ✅ Use reassignment reasons — they make audits painless.
+
+---
+
+## 14. Employee (User) Guide
+
+**Who is this for:** front-line staff. You see exactly your own workload — nothing more, nothing less.
+
+### 14.1 Chats (your main workspace)
+- The left panel lists **your assigned customers' conversations** plus groups you're a member of (and anything you've been temporarily granted).
+- Unread badges show what needs attention; the list is sorted by latest message.
+- Open a conversation → read history → type your reply → **Send**. Messages go out under the **Business Account** name (customers never see personal names).
+- Resolve finished conversations with the **Resolve** toggle to keep the inbox clean.
+
+### 14.2 Typing Indicators
+When a teammate is typing in the same conversation, you'll see it live — no double replies.
+
+### 14.3 Notifications
+- Get notified instantly for: new messages on your customers, new group messages, assignments, and coverage grants.
+- Mark individual or all notifications as read.
+
+### 14.4 Settings
+- Update your profile (name, phone, avatar color).
+- Change password.
+- Switch light/dark theme.
+
+### 14.5 What you can't do (by design)
+- You don't see other employees' customers (unless granted) — customer data stays protected.
+- You can't assign/reassign customers — ask your manager.
+
+### Employee Best Practices
+- ✅ Reply within your SLA — every message is timestamped and visible to management.
+- ✅ Use Resolve when a conversation is finished; it keeps dashboards accurate.
+- ✅ If you'll be away, ask your manager to set up Temporary Access coverage — customers keep getting replies.
+
+---
+<!-- PART9 -->
 
